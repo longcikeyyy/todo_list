@@ -1,4 +1,9 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'package:todo_list/models/login_request_demo.dart';
+import 'package:todo_list/models/user_info_demo.dart';
 
 void main() {
   runApp(const MyApp());
@@ -7,116 +12,185 @@ void main() {
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
-  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Flutter Demo',
       theme: ThemeData(
-        // This is the theme of your application.
-        //
-        // TRY THIS: Try running your application with "flutter run". You'll see
-        // the application has a purple toolbar. Then, without quitting the app,
-        // try changing the seedColor in the colorScheme below to Colors.green
-        // and then invoke "hot reload" (save your changes or press the "hot
-        // reload" button in a Flutter-supported IDE, or press "r" if you used
-        // the command line to start the app).
-        //
-        // Notice that the counter didn't reset back to zero; the application
-        // state is not lost during the reload. To reset the state, use hot
-        // restart instead.
-        //
-        // This works for code too, not just values: Most code changes can be
-        // tested with just a hot reload.
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
       ),
-      home: const MyHomePage(title: 'Flutter Demo Home Page'),
+      home: const DemoScreen(),
     );
   }
 }
 
-class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key, required this.title});
+class LoginRequest {
+  final String username;
+  final String password;
+  final int expiresInMins;
 
-  // This widget is the home page of your application. It is stateful, meaning
-  // that it has a State object (defined below) that contains fields that affect
-  // how it looks.
+  LoginRequest({
+    required this.username,
+    required this.password,
+    this.expiresInMins = 60,
+  });
 
-  // This class is the configuration for the state. It holds the values (in this
-  // case the title) provided by the parent (in this case the App widget) and
-  // used by the build method of the State. Fields in a Widget subclass are
-  // always marked "final".
-
-  final String title;
-
-  @override
-  State<MyHomePage> createState() => _MyHomePageState();
+  /// Convert LoginRequest object to json / map
+  Map<String, dynamic> toJson() {
+    return {
+      'username': username,
+      'password': password,
+      'expiresInMins': expiresInMins,
+    };
+  }
 }
 
-class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
+// fetch('https://dummyjson.com/user/login', {
+//   method: 'POST',
+//   headers: { 'Content-Type': 'application/json' },
+//   body: JSON.stringify({
 
-  void _incrementCounter() {
-    setState(() {
-      // This call to setState tells the Flutter framework that something has
-      // changed in this State, which causes it to rerun the build method below
-      // so that the display can reflect the updated values. If we changed
-      // _counter without calling setState(), then the build method would not be
-      // called again, and so nothing would appear to happen.
-      _counter++;
-    });
+//     username: 'emilys',
+//     password: 'emilyspass',
+//     expiresInMins: 30, // optional, defaults to 60
+//   }),
+// })
+// .then(res => res.json())
+// .then(console.log);
+
+// {
+//   "id": 1,
+//   "username": "emilys",
+//   "email": "emily.johnson@x.dummyjson.com",
+//   "firstName": "Emily",
+//   "lastName": "Johnson",
+//   "gender": "female",
+//   "image": "https://dummyjson.com/icon/emilys/128",
+//   "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...", // JWT accessToken (for backward compatibility) in response and cookies
+//   "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..." // refreshToken in response and cookies
+// }
+
+class UserInfo {
+  final int id;
+  final String username;
+  final String email;
+  final String firstName;
+  final String lastName;
+  final String gender;
+  final String image;
+  final String accessToken;
+  final String refreshToken;
+
+  UserInfo({
+    required this.id,
+    required this.username,
+    required this.email,
+    required this.firstName,
+    required this.lastName,
+    required this.gender,
+    required this.image,
+    required this.accessToken,
+    required this.refreshToken,
+  });
+
+  /// from json / map to UserInfo object
+  factory UserInfo.fromJson(Map<String, dynamic> json) {
+    return UserInfo(
+      id: json['id'],
+      username: json['username'],
+      email: json['email'],
+      firstName: json['firstName'],
+      lastName: json['lastName'],
+      gender: json['gender'],
+      image: json['image'],
+      accessToken: json['accessToken'],
+      refreshToken: json['refreshToken'],
+    );
+  }
+}
+
+class DemoScreen extends StatefulWidget {
+  const DemoScreen({super.key});
+
+  @override
+  State<DemoScreen> createState() => _DemoScreenState();
+}
+
+class _DemoScreenState extends State<DemoScreen> {
+  String userEmail = '---';
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
   }
 
   @override
   Widget build(BuildContext context) {
-    // This method is rerun every time setState is called, for instance as done
-    // by the _incrementCounter method above.
-    //
-    // The Flutter framework has been optimized to make rerunning build methods
-    // fast, so that you can just rebuild anything that needs updating rather
-    // than having to individually change instances of widgets.
     return Scaffold(
-      appBar: AppBar(
-        // TRY THIS: Try changing the color here to a specific color (to
-        // Colors.amber, perhaps?) and trigger a hot reload to see the AppBar
-        // change color while the other colors stay the same.
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        // Here we take the value from the MyHomePage object that was created by
-        // the App.build method, and use it to set our appbar title.
-        title: Text(widget.title),
+      body: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text('Demo Screen'),
+          ElevatedButton(
+            onPressed: () async {
+              final uri = Uri.parse('https://dummyjson.com/user/login');
+              // final request = LoginRequest(
+              //   username: 'emilys',
+              //   password: 'emilyspass',
+              //   expiresInMins: 30,
+              // );
+
+              final request = LoginRequestDemo(
+                username: 'emilys',
+                password: 'emilyspass',
+                expiresInMins: 30,
+              );
+
+              final response = await http.post(
+                uri,
+                headers: {'Content-Type': 'application/json'},
+
+                // /// Convert Map to String json by jsonEncode
+                // body: jsonEncode({
+                //   'username': 'emilys',
+                //   'password': 'emilyspass',
+                //   'expiresInMins': 30,
+                // }),
+
+                // /// Convert Object to String json by jsonEncode
+                body: jsonEncode(request.toJson()),
+              );
+
+              if (response.statusCode == 200) {
+                // /// Api return String json -> convert json / map by jsonDecode
+                // final data = jsonDecode(response.body);
+                // print('Response Data: $data');
+                // userEmail = data['email'];
+                /// userEmail = data['accessToken'];
+
+                /// Api return String json -> convert json/map -> convert to object
+                // final data = jsonDecode(response.body);
+                // final userInfo = UserInfo.fromJson(data);
+                // print('User Info: ${userInfo.email}');
+                // print('Access Token: ${userInfo.accessToken}');
+                // userEmail = userInfo.email;
+
+                /// Using generated model from json_serializable
+                final data = jsonDecode(response.body);
+                final userInfo = UserInfoDemo.fromJson(data);
+                print('User Info: ${userInfo.email}');
+                print('Access Token: ${userInfo.accessToken}');
+                userEmail = userInfo.email;
+                setState(() {});
+              } else {
+                print('Error: ${response.statusCode}');
+              }
+            },
+            child: Text('Call API'),
+          ),
+          Text('User Email: $userEmail'),
+        ],
       ),
-      body: Center(
-        // Center is a layout widget. It takes a single child and positions it
-        // in the middle of the parent.
-        child: Column(
-          // Column is also a layout widget. It takes a list of children and
-          // arranges them vertically. By default, it sizes itself to fit its
-          // children horizontally, and tries to be as tall as its parent.
-          //
-          // Column has various properties to control how it sizes itself and
-          // how it positions its children. Here we use mainAxisAlignment to
-          // center the children vertically; the main axis here is the vertical
-          // axis because Columns are vertical (the cross axis would be
-          // horizontal).
-          //
-          // TRY THIS: Invoke "debug painting" (choose the "Toggle Debug Paint"
-          // action in the IDE, or press "p" in the console), to see the
-          // wireframe for each widget.
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            const Text('You have pushed the button this many times:'),
-            Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.headlineMedium,
-            ),
-          ],
-        ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: const Icon(Icons.add),
-      ), // This trailing comma makes auto-formatting nicer for build methods.
     );
   }
 }

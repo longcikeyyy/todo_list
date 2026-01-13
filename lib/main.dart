@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:todo_list/providers/demo_provider.dart';
 import 'package:todo_list/routes/app_routes.dart';
-import 'package:todo_list/screens/demo_screen.dart';
 import 'package:todo_list/providers/task_provider.dart';
 
 void main() {

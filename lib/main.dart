@@ -1,15 +1,20 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:todo_list/providers/demo_provider.dart';
 import 'package:todo_list/routes/app_routes.dart';
-import 'package:todo_list/services/task_provider.dart';
-
+import 'package:todo_list/screens/demo_screen.dart';
+import 'package:todo_list/providers/task_provider.dart';
 
 void main() {
-  runApp(ChangeNotifierProvider(
-    create:(_) => TaskProvider(),
-    child: const MyApp()
-    )
-    );
+  runApp(
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (context) => TaskProvider()),
+        ChangeNotifierProvider(create: (context) => DemoProvider()),
+      ],
+      child: MyApp(),
+    ),
+  );
 }
 
 class MyApp extends StatefulWidget {
@@ -26,8 +31,7 @@ class _MyAppState extends State<MyApp> {
       debugShowCheckedModeBanner: false,
       initialRoute: AppRoutes.mainScreen,
       routes: AppRoutes.routes,
+      // home: const DemoScreen(),
     );
   }
 }
-
-

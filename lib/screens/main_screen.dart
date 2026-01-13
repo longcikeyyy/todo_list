@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:todo_list/constant/app_textstyle.dart';
-import 'package:todo_list/services/task_provider.dart';
+import 'package:todo_list/providers/task_provider.dart';
 import 'package:todo_list/component/app_taskcard.dart';
-
 import 'package:todo_list/constant/app_color.dart';
+import 'package:todo_list/routes/app_routes.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -14,26 +14,16 @@ class MainScreen extends StatefulWidget {
 }
 
 class _MainScreenState extends State<MainScreen> {
-  int _selectedIndex = 0;
-
-  void _onItemTapped(int index) {
-    setState(() {
-      _selectedIndex = index;
-    });
-  }
-
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<TaskProvider>().fetchTasks();
+      context.read<TaskProvider>().getAllTasks();
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    final provider = Provider.of<TaskProvider>(context);
-
     return Scaffold(
       backgroundColor: AppColor.backgroundColor,
       appBar: AppBar(
@@ -47,39 +37,46 @@ class _MainScreenState extends State<MainScreen> {
         ),
       ),
 
-      body: Builder(
-        builder: (_) {
-          if (provider.isLoading) {
-            return const Center(child: CircularProgressIndicator());
-          }
+      body: RefreshIndicator(
+        onRefresh: () => context.read<TaskProvider>().getAllTasks(),
+        child: Consumer<TaskProvider>(
+          builder: (_, provider, __) {
+            if (provider.isLoading) {
+              return const Center(child: CircularProgressIndicator());
+            }
 
-          if (provider.error != null) {
-            return Center(child: Text(provider.error!));
-          }
+            if (provider.errorMessage.isNotEmpty) {
+              return Center(child: Text(provider.errorMessage));
+            }
 
-          if (provider.tasks.isEmpty) {
-            return const Center(child: Text('No tasks'));
-          }
+            if (provider.pendingTasks.isEmpty) {
+              return const Center(child: Text('No tasks\nAdd your tasks now!'));
+            }
 
-          return ListView.separated(
-            padding: const EdgeInsets.only(top: 22),
-            itemCount: provider.tasks.length,
-            separatorBuilder: (context, index) => const SizedBox(height: 12),
-            itemBuilder: (context, index) {
-              final task = provider.tasks[index];
-              return TaskCard(
-                task: task,
-                onEdit: () {},
-                onDelete: () {},
-                onComplete: () {},
-              );
-            },
-          );
-        },
+            return ListView.separated(
+              padding: const EdgeInsets.only(top: 22),
+              itemCount: provider.pendingTasks.length,
+              separatorBuilder: (context, index) => const SizedBox(height: 12),
+              itemBuilder: (context, index) {
+                final task = provider.pendingTasks[index];
+                return TaskCard(
+                  task: task,
+                  onEdit: () {},
+                  onDelete: () {},
+                  onComplete: () {},
+                );
+              },
+            );
+          },
+        ),
       ),
       bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _selectedIndex,
-        onTap: _onItemTapped,
+        currentIndex: 0,
+        onTap: (index) {
+          if (index == 1) {
+            Navigator.pushNamed(context, AppRoutes.completeScreen);
+          }
+        },
         items: const [
           BottomNavigationBarItem(icon: Icon(Icons.list), label: 'All'),
           BottomNavigationBarItem(icon: Icon(Icons.check), label: 'Complete'),

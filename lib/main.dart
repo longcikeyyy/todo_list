@@ -6,10 +6,7 @@ import 'package:todo_list/providers/task_provider.dart';
 void main() {
   runApp(
     MultiProvider(
-      providers: [
-        ChangeNotifierProvider(create: (context) => TaskProvider()),
-        
-      ],
+      providers: [ChangeNotifierProvider(create: (context) => TaskProvider())],
       child: MyApp(),
     ),
   );

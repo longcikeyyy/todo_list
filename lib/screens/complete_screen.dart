@@ -10,7 +10,7 @@ class CompleteScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppAppbar(title: 'Completed Task',),
+      appBar: AppAppbar(title: 'Completed Task'),
       body: Consumer<TaskProvider>(
         builder: (_, taskProvider, __) {
           return ListView.separated(

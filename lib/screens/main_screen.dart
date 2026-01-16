@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:todo_list/constant/app_textstyle.dart';
-
 import 'package:todo_list/providers/task_provider.dart';
 import 'package:todo_list/component/app_taskcard.dart';
 import 'package:todo_list/constant/app_color.dart';

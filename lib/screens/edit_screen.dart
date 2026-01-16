@@ -14,8 +14,8 @@ class _EditScreenState extends State<EditScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppAppbar(title:"Edit Task"),
-      body:Column(
+      appBar: AppAppbar(title: "Edit Task"),
+      body: Column(
         children: [
           Center(
             child: Container(

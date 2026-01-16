@@ -68,7 +68,7 @@ class ApiService {
     final body = jsonEncode({
       'title': task.title,
       'description': task.description,
-      'status': "pendiente"
+      'status': "pendiente",
     });
     final response = await http.post(
       Uri.parse(url),

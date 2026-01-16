@@ -14,7 +14,7 @@ class TaskCard extends StatelessWidget {
     required this.task,
     this.onEdit,
     this.onDelete,
-    this.onComplete,
+    required this.onComplete,
   });
 
   @override
@@ -60,20 +60,20 @@ class TaskCard extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 // Edit button
-                IconButton(
-                  onPressed: onEdit,
-                  icon: const Icon(Icons.edit_outlined),
-                  color: AppColor.iconColor,
-                 
-                ),
+                if (onEdit != null)
+                  IconButton(
+                    onPressed: onEdit,
+                    icon: const Icon(Icons.edit_outlined),
+                    color: AppColor.iconColor,
+                  ),
 
                 // Delete button
-                IconButton(
-                  onPressed: onDelete,
-                  icon: const Icon(Icons.delete_outline),
-                  color: AppColor.iconColor,
-                 
-                ),
+                if (onEdit != null)
+                  IconButton(
+                    onPressed: onDelete,
+                    icon: const Icon(Icons.delete_outline),
+                    color: AppColor.iconColor,
+                  ),
 
                 // Complete button
                 IconButton(
@@ -84,7 +84,6 @@ class TaskCard extends StatelessWidget {
                         : Icons.check_circle_outline,
                   ),
                   color: task.isCompleted ? Colors.green : AppColor.iconColor,
-                  
                 ),
               ],
             ),

@@ -1,7 +1,5 @@
-
 import 'package:flutter/material.dart';
 import 'package:todo_list/constant/app_color.dart';
-
 
 class AppTextstyle {
   /// Regular -> 400
@@ -11,7 +9,7 @@ class AppTextstyle {
 
   static String fontFamily = 'Jost';
 
- static TextStyle tsJostSemiBoldSize24White = TextStyle(
+  static TextStyle tsJostSemiBoldSize24White = TextStyle(
     fontFamily: fontFamily,
     fontSize: 24,
     fontWeight: FontWeight.w600,
@@ -28,5 +26,11 @@ class AppTextstyle {
     fontSize: 10,
     fontWeight: FontWeight.w400,
     color: AppColor.blackColor,
+  );
+  static TextStyle tsJostRegularSize16Grey = TextStyle(
+    fontFamily: fontFamily,
+    fontSize: 16,
+    fontWeight: FontWeight.w400,
+    color: AppColor.hintTextColor,
   );
 }

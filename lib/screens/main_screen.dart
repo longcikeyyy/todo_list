@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:todo_list/constant/app_textstyle.dart';
+
 import 'package:todo_list/providers/task_provider.dart';
 import 'package:todo_list/component/app_taskcard.dart';
 import 'package:todo_list/constant/app_color.dart';
@@ -56,14 +57,41 @@ class _MainScreenState extends State<MainScreen> {
             return ListView.separated(
               padding: const EdgeInsets.only(top: 22),
               itemCount: provider.pendingTasks.length,
-              separatorBuilder: (context, index) => const SizedBox(height: 12),
+              separatorBuilder: (context, index) => const SizedBox(height: 8),
               itemBuilder: (context, index) {
                 final task = provider.pendingTasks[index];
                 return TaskCard(
                   task: task,
                   onEdit: () {},
                   onDelete: () {},
-                  onComplete: () {},
+                  onComplete: () async {
+                    try {
+                      await context.read<TaskProvider>().toggleTask(task);
+                    } catch (e) {
+                      if (!context.mounted) return;
+                      await showDialog<void>(
+                        context: context,
+                        builder: (dialogContext) => AlertDialog(
+                          backgroundColor: AppColor.backgroundColor,
+                          content: Text(
+                            textAlign: TextAlign.center,
+                            'Can not update',
+                            style: AppTextstyle.tsJostSemiBoldSize24White,
+                          ),
+                          actions: [
+                            TextButton(
+                              onPressed: () =>
+                                  Navigator.of(dialogContext).pop(),
+                              child: Text(
+                                'OK',
+                                style: AppTextstyle.tsJostSemiBoldSize13Purple,
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    }
+                  },
                 );
               },
             );
@@ -97,7 +125,9 @@ class _MainScreenState extends State<MainScreen> {
         ),
         child: IconButton(
           icon: Icon(Icons.add, color: AppColor.whiteColor),
-          onPressed: () {},
+          onPressed: () {
+            Navigator.pushNamed(context, AppRoutes.createScreen);
+          },
         ),
       ),
     );

@@ -19,6 +19,9 @@ class Task {
   factory Task.fromJson(Map<String, dynamic> json) => _$TaskFromJson(json);
 
   Map<String, dynamic> toJson() => _$TaskToJson(this);
+  Map<String, dynamic> toCreateJson() {
+    return {'title': title, 'description': description, 'status': status};
+  }
 
   bool get isCompleted => status == 'completada';
   bool get isPending => status == 'pendiente';

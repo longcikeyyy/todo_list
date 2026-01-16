@@ -20,10 +20,6 @@ class ApiService {
   Future<List<Task>> getAllTasks() async {
     try {
       final response = await http.get(Uri.parse(_baseUrl), headers: _headers);
-      debugPrint('API Method: GET $_baseUrl');
-      debugPrint('Response status: ${response.statusCode}');
-      debugPrint('Response body: ${response.body}');
-
       if (response.statusCode == 200) {
         final Map<String, dynamic> json = jsonDecode(response.body);
         final List<dynamic> data = json['data'];
@@ -41,63 +37,48 @@ class ApiService {
     }
   }
 
-  /// Create a new task via the API
-  Future<List<Task>> createTask() async {
-    final response = await http.get(
-      Uri.parse('https://task-manager-api3.p.rapidapi.com/'),
-      headers: {
-        'Content-Type': 'application/json',
-        'x-rapidapi-host': 'task-manager-api3.p.rapidapi.com',
-        'x-rapidapi-key': '7d744c6ef6msh6295387dee9a9e0p1f763djsndf07a261252a',
-      },
-    );
-
-    if (response.statusCode == 200) {
-      final Map<String, dynamic> json = jsonDecode(response.body);
-      final List<dynamic> data = json['data'];
-      return data.map((e) => Task.fromJson(e)).toList();
-    } else {
-      throw Exception('Failed to load data');
-    }
-  }
-
   /// Update an existing task via the API
-  Future<List<Task>> updateTask() async {
-    final response = await http.get(
-      Uri.parse('https://task-manager-api3.p.rapidapi.com/'),
-      headers: {
-        'Content-Type': 'application/json',
-        'x-rapidapi-host': 'task-manager-api3.p.rapidapi.com',
-        'x-rapidapi-key': '7d744c6ef6msh6295387dee9a9e0p1f763djsndf07a261252a',
-      },
+  Future<void> updateTask({
+    required Task task,
+    required String newStatus,
+  }) async {
+    final url = '$_baseUrl${task.id}';
+
+    final body = jsonEncode({
+      'title': task.title,
+      'description': task.description,
+      'status': newStatus,
+    });
+
+    final response = await http.put(
+      Uri.parse(url),
+      headers: _headers,
+      body: body,
     );
 
-    if (response.statusCode == 200) {
-      final Map<String, dynamic> json = jsonDecode(response.body);
-      final List<dynamic> data = json['data'];
-      return data.map((e) => Task.fromJson(e)).toList();
-    } else {
-      throw Exception('Failed to load data');
+    if (response.statusCode != 200 && response.statusCode != 201) {
+      throw Exception('Update failed: ${response.body}');
     }
+    debugPrint('✓ Task updated successfully');
   }
 
-  //// Delete a task via the API
-  Future<List<Task>> deleteTask() async {
-    final response = await http.get(
-      Uri.parse('https://task-manager-api3.p.rapidapi.com/'),
-      headers: {
-        'Content-Type': 'application/json',
-        'x-rapidapi-host': 'task-manager-api3.p.rapidapi.com',
-        'x-rapidapi-key': '7d744c6ef6msh6295387dee9a9e0p1f763djsndf07a261252a',
-      },
+  ///create task
+  Future<void> createTask({required Task task}) async {
+    final url = _baseUrl;
+    final body = jsonEncode({
+      'title': task.title,
+      'description': task.description,
+      'status': "pendiente"
+    });
+    final response = await http.post(
+      Uri.parse(url),
+      headers: _headers,
+      body: body,
     );
 
-    if (response.statusCode == 200) {
-      final Map<String, dynamic> json = jsonDecode(response.body);
-      final List<dynamic> data = json['data'];
-      return data.map((e) => Task.fromJson(e)).toList();
-    } else {
-      throw Exception('Failed to load data');
+    if (response.statusCode != 200 && response.statusCode != 201) {
+      throw Exception('Update failed: ${response.body}');
     }
+    debugPrint(' Task create successfully');
   }
 }

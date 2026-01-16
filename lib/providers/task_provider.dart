@@ -26,14 +26,42 @@ class TaskProvider extends ChangeNotifier {
       notifyListeners();
 
       _tasks = await _taskRepository.getAllTasks();
-      debugPrint('Tasks count: ${_tasks.length}');
-      debugPrint('Completed tasks: ${completedTasks.length}');
-      debugPrint('Pending tasks: ${pendingTasks.length}');
 
       notifyListeners();
     } catch (e) {
       _errorMessage = 'Failed to load tasks: $e';
       notifyListeners();
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  ///handel togle complete task
+  Future<void> toggleTask(Task task) async {
+    try {
+      final updatedTask = await _taskRepository.toggleTask(task);
+
+      final index = _tasks.indexWhere((task) => task.id == updatedTask.id);
+      if (index != -1) {
+        _tasks[index] = updatedTask;
+        notifyListeners();
+      }
+    } catch (e) {
+      throw Exception(e.toString());
+    }
+  }
+
+  Future<bool> createTask(Task task) async {
+    _isLoading = true;
+    notifyListeners();
+    try {
+      final createdTask = await _taskRepository.createTask(task);
+      _tasks.add(createdTask);
+      return true;
+    } catch (e) {
+      _errorMessage = e.toString();
+      return false;
     } finally {
       _isLoading = false;
       notifyListeners();

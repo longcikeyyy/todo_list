@@ -19,6 +19,7 @@ class _MainScreenState extends State<MainScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<TaskProvider>().init();
       context.read<TaskProvider>().getAllTasks();
     });
   }
@@ -62,19 +63,26 @@ class _MainScreenState extends State<MainScreen> {
                 final task = provider.pendingTasks[index];
                 return TaskCard(
                   task: task,
-                  onEdit: () async{
-                      final updated = await Navigator.push<bool>(
-      context,
-      MaterialPageRoute(
-        builder: (_) => EditScreen(task: task),
-      ),
-    );
+                  onEdit: () async {
+                    final updated = await Navigator.push<bool>(
+                      context,
+                      MaterialPageRoute(builder: (_) => EditScreen(task: task)),
+                    );
 
-    if (updated == true) {
-      context.read<TaskProvider>().getAllTasks();
-    }
+                    if (updated == true && context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                          content: Text(
+                            'Update Successful',
+                            style: AppTextstyle.tsJostSemiBoldSize13Purple
+                                .copyWith(color: AppColor.whiteColor),
+                          ),
+                          backgroundColor: AppColor.purpleColor,
+                        ),
+                      );
+                    }
                   },
-                  onDelete: ()async {
+                  onDelete: () async {
                     final confirm = await showDialog<bool>(
                       context: context,
                       builder: (dialogContext) => AlertDialog(
@@ -91,19 +99,20 @@ class _MainScreenState extends State<MainScreen> {
                         ),
                         actions: [
                           TextButton(
-                            onPressed: () => Navigator.of(dialogContext).pop(false),
+                            onPressed: () =>
+                                Navigator.of(dialogContext).pop(false),
                             child: Text(
                               'Cancel',
                               style: AppTextstyle.tsJostSemiBoldSize13Purple,
                             ),
                           ),
                           TextButton(
-                            onPressed: () => Navigator.of(dialogContext).pop(true),
+                            onPressed: () =>
+                                Navigator.of(dialogContext).pop(true),
                             child: Text(
                               'Delete',
-                              style: AppTextstyle.tsJostSemiBoldSize13Purple.copyWith(
-                                color: AppColor.purpleColor,
-                              ),
+                              style: AppTextstyle.tsJostSemiBoldSize13Purple
+                                  .copyWith(color: AppColor.purpleColor),
                             ),
                           ),
                         ],
@@ -111,21 +120,20 @@ class _MainScreenState extends State<MainScreen> {
                     );
                     if (confirm == true) {
                       try {
-                       await provider.deleteTask(task.id!);
+                        await provider.deleteTask(task.id!);
                         if (!context.mounted) return;
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(
                             content: Text(
                               'Delete Successful',
-                              style: AppTextstyle.tsJostSemiBoldSize13Purple.copyWith(
-                                color: AppColor.whiteColor,
-                              ),
+                              style: AppTextstyle.tsJostSemiBoldSize13Purple
+                                  .copyWith(color: AppColor.whiteColor),
                             ),
                             backgroundColor: AppColor.purpleColor,
                           ),
                         );
                       } catch (e) {
-                        if (!context.mounted) return;                    
+                        if (!context.mounted) return;
                         await showDialog<void>(
                           context: context,
                           builder: (dialogContext) => AlertDialog(
@@ -137,10 +145,12 @@ class _MainScreenState extends State<MainScreen> {
                             ),
                             actions: [
                               TextButton(
-                                onPressed: () => Navigator.of(dialogContext).pop(),
+                                onPressed: () =>
+                                    Navigator.of(dialogContext).pop(),
                                 child: Text(
                                   'OK',
-                                  style: AppTextstyle.tsJostSemiBoldSize13Purple,
+                                  style:
+                                      AppTextstyle.tsJostSemiBoldSize13Purple,
                                 ),
                               ),
                             ],

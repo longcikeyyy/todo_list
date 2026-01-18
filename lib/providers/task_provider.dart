@@ -20,8 +20,12 @@ class TaskProvider extends ChangeNotifier {
   List<Task> get pendingTasks =>
       _tasks.where((task) => task.isPending).toList();
 
+  /// Initialize repository and storage service
+  Future<void> init() async {
+    await _taskRepository.init();
+  }
 
-//get all task list
+  //get all task list
   Future<void> getAllTasks() async {
     try {
       _isLoading = true;
@@ -39,7 +43,6 @@ class TaskProvider extends ChangeNotifier {
     }
   }
 
-
   ///handel togle complete task
   Future<void> toggleTask(Task task) async {
     try {
@@ -51,12 +54,12 @@ class TaskProvider extends ChangeNotifier {
         notifyListeners();
       }
     } catch (e) {
-      throw Exception(e.toString());
+      _errorMessage = 'Failed to toggle tasks: $e';
+      notifyListeners();
     }
   }
 
-
-//create new task
+  //create new task
   Future<bool> createTask(Task task) async {
     _isLoading = true;
     notifyListeners();
@@ -73,57 +76,40 @@ class TaskProvider extends ChangeNotifier {
     }
   }
 
-
   //delete task
-   Future<void> deleteTask(String taskId) async {
+  Future<void> deleteTask(String taskId) async {
     _isLoading = true;
-    _errorMessage = 'null';
     notifyListeners();
 
     try {
-      final success = await _taskRepository.deleteTask(taskId);
-      
-      if (success) {
-        
-        _errorMessage = '';
-      } else {
-        _errorMessage = 'Can not delete';
-      }
+      await _taskRepository.deleteTask(taskId);
+
+      _tasks.removeWhere((task) => task.id == taskId);
+      notifyListeners();
     } catch (e) {
-      _errorMessage = 'Error: $e';
+      _errorMessage = 'Error while deleting task: $e';
     } finally {
       _isLoading = false;
       notifyListeners();
     }
   }
 
-
-   Future<bool> updateTask(Task updatedTask, {
-    required Task task,
-    required String newStatus,
-  }) async {
+  Future<void> editTask({required Task task}) async {
     _isLoading = true;
     _errorMessage = '';
     notifyListeners();
 
     try {
-      final success = await _taskRepository.updateTask(
-        task: task,
-        newStatus: newStatus,
-      );
-      
-      if (success) {
-        
-        await getAllTasks();
-        _errorMessage = '';
-        return true;
-      } else {
-        _errorMessage = 'Can not update task';
-        return false;
+      await _taskRepository.editTask(task: task);
+
+      // await getAllTasks();
+      final index = _tasks.indexWhere((e) => e.id == task.id);
+      if (index != -1) {
+        _tasks[index] = task;
+        notifyListeners();
       }
     } catch (e) {
-      _errorMessage = 'Error: $e';
-      return false;
+      _errorMessage = 'Error while editing task: $e';
     } finally {
       _isLoading = false;
       notifyListeners();

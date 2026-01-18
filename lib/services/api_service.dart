@@ -38,63 +38,61 @@ class ApiService {
   }
 
   /// Update an existing task via the API
-  Future<void> updateTask({
-    required Task task,
-    required String newStatus,
-  }) async {
-    final url = '$_baseUrl${task.id}';
+  Future<void> updateTask({required Task task}) async {
+    try {
+      final url = '$_baseUrl${task.id}';
 
-    final body = jsonEncode({
-      'title': task.title,
-      'description': task.description,
-      'status': newStatus,
-    });
+      final body = jsonEncode(task.toUpdateJson());
 
-    final response = await http.put(
-      Uri.parse(url),
-      headers: _headers,
-      body: body,
-    );
+      final response = await http.put(
+        Uri.parse(url),
+        headers: _headers,
+        body: body,
+      );
 
-    if (response.statusCode != 200 && response.statusCode != 201) {
-      throw Exception('Update failed: ${response.body}');
+      if (response.statusCode != 200 && response.statusCode != 201) {
+        throw Exception('Update failed: ${response.body}');
+      }
+      debugPrint('✓ Task updated successfully');
+    } catch (e) {
+      debugPrint('Error updating task: $e');
+      throw Exception('Update failed: $e');
     }
-    debugPrint('✓ Task updated successfully');
   }
 
   ///create task
   Future<void> createTask({required Task task}) async {
-    final url = _baseUrl;
-    final body = jsonEncode({
-      'title': task.title,
-      'description': task.description,
-      'status': "pendiente",
-    });
-    final response = await http.post(
-      Uri.parse(url),
-      headers: _headers,
-      body: body,
-    );
+    try {
+      final url = _baseUrl;
+      final body = jsonEncode(task.toUpdateJson());
+      final response = await http.post(
+        Uri.parse(url),
+        headers: _headers,
+        body: body,
+      );
 
-    if (response.statusCode != 200 && response.statusCode != 201) {
-      throw Exception('Update failed: ${response.body}');
+      if (response.statusCode != 200 && response.statusCode != 201) {
+        throw Exception('Update failed: ${response.body}');
+      }
+      debugPrint(' Task create successfully');
+    } catch (e) {
+      debugPrint('Error creating task: $e');
+      throw Exception('Create failed: $e');
     }
-    debugPrint(' Task create successfully');
   }
 
-  
-//delete task
-  Future<void> deleteTask(String taskId)  async {
-    final url = '$_baseUrl$taskId';
-    final response = await http.delete(
-      Uri.parse(url),
-      headers: _headers,
-    );
-    if (response.statusCode != 200 && response.statusCode != 204) {
-      throw Exception('Failed Delete Task: ${response.body}');
+  //delete task
+  Future<void> deleteTask(String taskId) async {
+    try {
+      final url = '$_baseUrl$taskId';
+      final response = await http.delete(Uri.parse(url), headers: _headers);
+      if (response.statusCode != 200 && response.statusCode != 204) {
+        throw Exception('Failed Delete Task: ${response.body}');
+      }
+      debugPrint('Delete Task Successfully');
+    } catch (e) {
+      debugPrint('Error deleting task: $e');
+      throw Exception('Delete failed: $e');
     }
-    debugPrint('Delete Task Successfully');
   }
-
-  
 }

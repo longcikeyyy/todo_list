@@ -7,68 +7,64 @@ import 'package:todo_list/models/task_model.dart';
 import 'package:todo_list/providers/task_provider.dart';
 
 class EditScreen extends StatefulWidget {
-  final Task task; 
-  const EditScreen({super.key,required this.task});
+  final Task task;
+  const EditScreen({super.key, required this.task});
 
   @override
   State<EditScreen> createState() => _EditScreenState();
-
 }
-
 
 class _EditScreenState extends State<EditScreen> {
   final TextEditingController titleController = TextEditingController();
   final TextEditingController detailController = TextEditingController();
   @override
-void initState() {
-  super.initState();
-  titleController.text = widget.task.title;
-  detailController.text = widget.task.description;
-}
- 
-    @override
+  void initState() {
+    super.initState();
+    titleController.text = widget.task.title;
+    detailController.text = widget.task.description;
+  }
+
+  @override
   void dispose() {
     titleController.dispose();
     detailController.dispose();
     super.dispose();
   }
+
   Future<void> onUpdateTask() async {
-  final title = titleController.text.trim();
-  final detail = detailController.text.trim();
+    final title = titleController.text.trim();
+    final detail = detailController.text.trim();
 
-  if (title.isEmpty || detail.isEmpty) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Please fill all fields')),
+    if (title.isEmpty || detail.isEmpty) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Please fill all fields')));
+      return;
+    }
+
+    final updatedTask = Task(
+      id: widget.task.id,
+      title: title,
+      description: detail,
+      status: widget.task.status,
     );
-    return;
+
+    final provider = context.read<TaskProvider>();
+    try {
+      await provider.editTask(task: updatedTask);
+
+      if (!mounted) return;
+
+      Navigator.pop(context, true);
+    } catch (e) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Error updating task: $e')));
+    }
   }
-
-  final updatedTask = Task(
-    id: widget.task.id,
-    title: title,
-    description: detail,
-    status: widget.task.status,
-  );
-
-  final provider = context.read<TaskProvider>();
-  final success = await provider.updatedTask(task: null, newStatus: '');
- 
-
-  if (!mounted) return;
-
-  if (success) {
-    Navigator.pop(context, true);
-  } else {
-    ScaffoldMessenger.of(context)
-        .showSnackBar(SnackBar(content: Text(provider.errorMessage)));
-  }
-}
- 
-
 
   @override
   Widget build(BuildContext context) {
-
     return Scaffold(
       appBar: AppAppbar(title: "Edit Task"),
       body: Column(
@@ -80,10 +76,7 @@ void initState() {
               width: (356 / 414) * MediaQuery.of(context).size.width,
               child: Column(
                 children: [
-                  AppTextfield(
-                    hintText: 'Title',
-                    controller: titleController,
-                  ),
+                  AppTextfield(hintText: 'Title', controller: titleController),
                   SizedBox(height: 40),
                   AppTextfield(
                     hintText: 'Detail',
@@ -95,21 +88,20 @@ void initState() {
           ),
 
           const SizedBox(height: 24),
-Row(
-  mainAxisAlignment : MainAxisAlignment.center,
-  children: [
-    AppButton(
-    onTap: onUpdateTask,
-    textButton:"Update",width: 170,),
-    SizedBox(width: 46),
-    AppButton(
-      onTap: () {
-        Navigator.pop(context);
-      },
-      textButton:"Cancel",width: 170,),
-  ],
-)
-          
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              AppButton(onTap: onUpdateTask, textButton: "Update", width: 170),
+              SizedBox(width: 46),
+              AppButton(
+                onTap: () {
+                  Navigator.pop(context);
+                },
+                textButton: "Cancel",
+                width: 170,
+              ),
+            ],
+          ),
         ],
       ),
     );

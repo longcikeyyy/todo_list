@@ -20,6 +20,8 @@ class TaskProvider extends ChangeNotifier {
   List<Task> get pendingTasks =>
       _tasks.where((task) => task.isPending).toList();
 
+
+//get all task list
   Future<void> getAllTasks() async {
     try {
       _isLoading = true;
@@ -37,6 +39,7 @@ class TaskProvider extends ChangeNotifier {
     }
   }
 
+
   ///handel togle complete task
   Future<void> toggleTask(Task task) async {
     try {
@@ -52,6 +55,8 @@ class TaskProvider extends ChangeNotifier {
     }
   }
 
+
+//create new task
   Future<bool> createTask(Task task) async {
     _isLoading = true;
     notifyListeners();
@@ -62,6 +67,30 @@ class TaskProvider extends ChangeNotifier {
     } catch (e) {
       _errorMessage = e.toString();
       return false;
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+
+  //delete task
+   Future<void> deleteTask(String taskId) async {
+    _isLoading = true;
+    _errorMessage = 'null';
+    notifyListeners();
+
+    try {
+      final success = await _taskRepository.deleteTask(taskId);
+      
+      if (success) {
+        await getAllTasks();
+        _errorMessage = '';
+      } else {
+        _errorMessage = 'Can not delete';
+      }
+    } catch (e) {
+      _errorMessage = 'Error: $e';
     } finally {
       _isLoading = false;
       notifyListeners();

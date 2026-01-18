@@ -61,8 +61,84 @@ class _MainScreenState extends State<MainScreen> {
                 final task = provider.pendingTasks[index];
                 return TaskCard(
                   task: task,
-                  onEdit: () {},
-                  onDelete: () {},
+                  onEdit: () {
+                     Navigator.pushNamed(context, AppRoutes.editScreen);
+                  },
+                  onDelete: ()async {
+                    final confirm = await showDialog<bool>(
+                      context: context,
+                      builder: (dialogContext) => AlertDialog(
+                        backgroundColor: AppColor.backgroundColor,
+                        title: Text(
+                          'Confirm delete',
+                          style: AppTextstyle.tsJostSemiBoldSize24White,
+                          textAlign: TextAlign.center,
+                        ),
+                        content: Text(
+                          'Are you sure to delete this task?',
+                          style: AppTextstyle.tsJostSemiBoldSize13Purple,
+                          textAlign: TextAlign.center,
+                        ),
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.of(dialogContext).pop(false),
+                            child: Text(
+                              'Cancel',
+                              style: AppTextstyle.tsJostSemiBoldSize13Purple,
+                            ),
+                          ),
+                          TextButton(
+                            onPressed: () => Navigator.of(dialogContext).pop(true),
+                            child: Text(
+                              'Delete',
+                              style: AppTextstyle.tsJostSemiBoldSize13Purple.copyWith(
+                                color: AppColor.purpleColor,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                    if (confirm == true) {
+                      try {
+                       await provider.deleteTask(task.id!);
+                        if (!context.mounted) return;
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Text(
+                              'Delete Successful',
+                              style: AppTextstyle.tsJostSemiBoldSize13Purple.copyWith(
+                                color: AppColor.whiteColor,
+                              ),
+                            ),
+                            backgroundColor: AppColor.purpleColor,
+                          ),
+                        );
+                      } catch (e) {
+                        if (!context.mounted) return;                    
+                        await showDialog<void>(
+                          context: context,
+                          builder: (dialogContext) => AlertDialog(
+                            backgroundColor: AppColor.backgroundColor,
+                            content: Text(
+                              textAlign: TextAlign.center,
+                              'Can not delete this task',
+                              style: AppTextstyle.tsJostSemiBoldSize24White,
+                            ),
+                            actions: [
+                              TextButton(
+                                onPressed: () => Navigator.of(dialogContext).pop(),
+                                child: Text(
+                                  'OK',
+                                  style: AppTextstyle.tsJostSemiBoldSize13Purple,
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
+                      }
+                    }
+                  },
                   onComplete: () async {
                     try {
                       await context.read<TaskProvider>().toggleTask(task);

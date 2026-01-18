@@ -4,10 +4,14 @@ import 'package:todo_list/services/api_service.dart';
 class TaskRepository {
   final ApiService apiService = ApiService();
 
+
+//get all tassk
   Future<List<Task>> getAllTasks() async {
     return await apiService.getAllTasks();
   }
 
+
+//update task
   Future<Task> toggleTask(Task task) async {
     if (task.id == null) {
       throw Exception('Task id is null');
@@ -22,6 +26,8 @@ class TaskRepository {
     );
   }
 
+
+//create task
   Future<Task> createTask(Task task) async {
     final newStatus = 'pendiente';
     await apiService.createTask(task: task);
@@ -31,5 +37,16 @@ class TaskRepository {
       description: task.description,
       status: newStatus,
     );
+  }
+
+
+//delete task
+  Future<bool> deleteTask(String taskId) async {
+    try {
+      await apiService.deleteTask(taskId);
+      return true;
+    } catch (e) {
+      return false;
+    }
   }
 }

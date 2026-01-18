@@ -81,4 +81,18 @@ class ApiService {
     }
     debugPrint(' Task create successfully');
   }
+
+  
+//delete task
+  Future<void> deleteTask(String taskId)  async {
+    final url = '$_baseUrl$taskId';
+    final response = await http.delete(
+      Uri.parse(url),
+      headers: _headers,
+    );
+    if (response.statusCode != 200 && response.statusCode != 204) {
+      throw Exception('Failed Delete Task: ${response.body}');
+    }
+    debugPrint('Delete Task Successfully');
+  }
 }

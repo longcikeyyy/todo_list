@@ -5,6 +5,7 @@ import 'package:todo_list/providers/task_provider.dart';
 import 'package:todo_list/component/app_taskcard.dart';
 import 'package:todo_list/constant/app_color.dart';
 import 'package:todo_list/routes/app_routes.dart';
+import 'package:todo_list/screens/edit_screen.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -61,8 +62,17 @@ class _MainScreenState extends State<MainScreen> {
                 final task = provider.pendingTasks[index];
                 return TaskCard(
                   task: task,
-                  onEdit: () {
-                     Navigator.pushNamed(context, AppRoutes.editScreen);
+                  onEdit: () async{
+                      final updated = await Navigator.push<bool>(
+      context,
+      MaterialPageRoute(
+        builder: (_) => EditScreen(task: task),
+      ),
+    );
+
+    if (updated == true) {
+      context.read<TaskProvider>().getAllTasks();
+    }
                   },
                   onDelete: ()async {
                     final confirm = await showDialog<bool>(

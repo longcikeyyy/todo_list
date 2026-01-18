@@ -11,7 +11,7 @@ class TaskRepository {
   }
 
 
-//update task
+//update complete task
   Future<Task> toggleTask(Task task) async {
     if (task.id == null) {
       throw Exception('Task id is null');
@@ -44,6 +44,21 @@ class TaskRepository {
   Future<bool> deleteTask(String taskId) async {
     try {
       await apiService.deleteTask(taskId);
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+
+//update task
+  Future<bool> updateTask({
+    required Task task, required String newStatus,
+  }) async {
+    try {
+      await apiService.updateTask(
+        task: task, newStatus:,
+       
+      );
       return true;
     } catch (e) {
       return false;

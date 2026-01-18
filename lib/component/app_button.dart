@@ -6,15 +6,17 @@ import 'package:todo_list/constant/app_textstyle.dart';
 class AppButton extends StatelessWidget {
   final String textButton;
   final Function()? onTap;
+  final double? width;
+  
 
-  const AppButton({super.key, required this.textButton, this.onTap});
+  const AppButton({super.key, required this.textButton, this.onTap,required this.width});
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        width: MediaQuery.of(context).size.width - 14 - 14,
+        width: width,
         height: 66,
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(15),

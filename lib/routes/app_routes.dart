@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:todo_list/screens/complete_screen.dart';
 import 'package:todo_list/screens/create_screen.dart';
-import 'package:todo_list/screens/edit_screen.dart';
+
 import 'package:todo_list/screens/main_screen.dart';
 
 class AppRoutes {
@@ -16,6 +16,6 @@ class AppRoutes {
     AppRoutes.mainScreen: (context) => MainScreen(),
     AppRoutes.completeScreen: (context) => CompleteScreen(),
     AppRoutes.createScreen: (context) => CreateScreen(),
-    AppRoutes.editScreen: (context) => EditScreen(),
+    
   };
 }

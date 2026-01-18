@@ -84,13 +84,46 @@ class TaskProvider extends ChangeNotifier {
       final success = await _taskRepository.deleteTask(taskId);
       
       if (success) {
-        await getAllTasks();
+        
         _errorMessage = '';
       } else {
         _errorMessage = 'Can not delete';
       }
     } catch (e) {
       _errorMessage = 'Error: $e';
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+
+   Future<bool> updateTask(Task updatedTask, {
+    required Task task,
+    required String newStatus,
+  }) async {
+    _isLoading = true;
+    _errorMessage = '';
+    notifyListeners();
+
+    try {
+      final success = await _taskRepository.updateTask(
+        task: task,
+        newStatus: newStatus,
+      );
+      
+      if (success) {
+        
+        await getAllTasks();
+        _errorMessage = '';
+        return true;
+      } else {
+        _errorMessage = 'Can not update task';
+        return false;
+      }
+    } catch (e) {
+      _errorMessage = 'Error: $e';
+      return false;
     } finally {
       _isLoading = false;
       notifyListeners();

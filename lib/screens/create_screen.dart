@@ -25,7 +25,7 @@ class _CreateScreenState extends State<CreateScreen> {
     super.dispose();
   }
 
-  Future<void> _onAddTask() async {
+  Future<void> onAddTask() async {
     final title = titleController.text.trim();
     final detail = detailController.text.trim();
 
@@ -94,9 +94,9 @@ class _CreateScreenState extends State<CreateScreen> {
                 ),
               ),
             ),
-        
+            
             const SizedBox(height: 24),
-            AppButton(textButton: "ADD", onTap: _onAddTask),
+            AppButton(textButton: "ADD", onTap: onAddTask,width:MediaQuery.of(context).size.width - 14 - 14),
           ],
         ),
       ),

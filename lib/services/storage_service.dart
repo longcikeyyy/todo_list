@@ -65,25 +65,80 @@ class StorageService {
   /// Sync Queue Operations Logic _syncQueueBox
 
   /// Add Task to Sync Queue Box
-  Future<void> addTasksToSyncBox(Map<String, dynamic> valueTask) async {
-    await _syncQueueBox.clear();
-    final key = DateTime.now().microsecondsSinceEpoch.toString();
-    //final valueTask = '';
-    await _syncQueueBox.put(key, valueTask);
+  /// Operation: Create, Update, Delete
+  Future<void> addATaskToSyncBox({
+    required Task task,
+    required String operation,
+  }) async {
+    Task ensureTask = task;
+    if (task.id == null || task.id!.isEmpty) {
+      final String generatedId = DateTime.now().microsecondsSinceEpoch
+          .toString();
+      ensureTask = Task(
+        id: generatedId,
+        title: task.title,
+        description: task.description,
+        status: task.status,
+      );
+    }
+    final Map<dynamic, dynamic> data;
+
+    /// LOCAL LOGIC:
+    /// check operation
+    /// CREATE -> CREATE -> POST
+    /// UPDATE -> UPDATE -> PUT
+    /// DELETE -> DELETE -> DELETE
+    ///
+    /// CREATE + UPDATE -> CREATE -> POST
+    /// CREATE + DELETE -> no need to sync
+    /// UPDATE + DELETE -> DELETE -> DELETE
+    /// Get existing task from sync queue box -> get its operation
+    final Map<dynamic, dynamic>? existingTaskInfo = _syncQueueBox.get(
+      ensureTask.id,
+    );
+    if (existingTaskInfo != null) {
+      /// Existing task in sync queue box -> get its operation
+      final String? operationExistingTask =
+          existingTaskInfo['operation'] as String?;
+
+      if (operation == 'update' && operationExistingTask == 'create') {
+        data = {'task': ensureTask.toJson(), 'operation': 'create'};
+      } else if (operation == 'delete' && operationExistingTask == 'create') {
+        _syncQueueBox.delete(ensureTask.id);
+        debugPrint(
+          'Task ${ensureTask.id} is already in sync queue box with operation create -> no need to sync',
+        );
+        return;
+      } else {
+        data = {'task': ensureTask.toJson(), 'operation': operation};
+      }
+      await _syncQueueBox.put(ensureTask.id, data);
+      debugPrint('Sync queue box length: ${_syncQueueBox.length}');
+    } else {
+      /// Never save this task to sync queue box before -> no existing task before
+      data = {'task': ensureTask.toJson(), 'operation': operation};
+      await _syncQueueBox.put(ensureTask.id, data);
+      debugPrint('Sync queue box length: ${_syncQueueBox.length}');
+    }
   }
 
   /// Get all Sync Queue Items
   Future<List<Map>> getAllSyncBoxTask() async {
+    debugPrint('Fetching all sync queue items from local storage...');
+    debugPrint('Total sync queue items found: ${_syncQueueBox.length}');
     return _syncQueueBox.values.toList();
   }
 
   /// Clear all Sync Queue Box
-  Future<void>deleteAllSyncBoxTasks(List<String> keys )async{
-    await _syncQueueBox.deleteAll(keys);
+  Future<void> deleteAllSyncBoxTasks() async {
+    await _syncQueueBox.clear();
+    debugPrint('All sync queue items deleted successfully.');
   }
+
   /// Delete a specific Sync Queue Item
-  Future<void> deleteSyncBoxTasks(String key) async {
+  Future<void> deleteASyncBoxTask(String key) async {
     debugPrint('Deleting sync queue item with key: $key');
     await _syncQueueBox.delete(key);
+    debugPrint('Deleted sync queue item successfully.');
   }
 }

@@ -20,20 +20,95 @@ class TaskRepository {
     _connectivity.onConnectivityChanged.listen((
       List<ConnectivityResult> result,
     ) async {
-      if (result.contains(ConnectivityResult.none)) {
-        debugPrint('Offline mode: No internet connection.');
-        
-        /// Do something when offline
-         await storageService.getAllTasks();
-      } else {
+      if (!result.contains(ConnectivityResult.none)) {
         debugPrint('Online mode: Internet connection restored.');
 
         /// If online, do something when online
         /// sync local changes to server
-        final localTasks = await storageService.getAllTasks(); 
-        await apiService.getAllTasks();
+        try {
+          /// sync pending operations to server
+          await _syncPendingOperationsToServer();
+
+          /// Refresh data from server
+          /// fetch from API
+          final allTasks = await apiService.getAllTasks();
+
+          /// save tasks to local storage
+          await storageService.saveAllTasks(allTasks);
+        } catch (e) {
+          debugPrint('Error syncing local changes to server: $e');
+          throw Exception('Failed to sync local changes to server: $e');
+        }
+      } else {
+        debugPrint('Offline mode: No internet connection.');
       }
     });
+  }
+
+  Future<void> _syncPendingOperationsToServer() async {
+    debugPrint('Syncing pending operations to server...');
+
+    /// get all sync queue items
+    final syncQueueItems = await storageService.getAllSyncBoxTask();
+
+    /// if empty -> do nothing
+    if (syncQueueItems.isEmpty) return;
+
+    debugPrint(
+      'Syncing ${syncQueueItems.length} pending operations to server...',
+    );
+
+    /// Sync single operation to server
+    for (var item in syncQueueItems) {
+      try {
+        final operation = item['operation'] as String;
+        final taskJson = Map<String, dynamic>.from(item['task'] as Map);
+        final task = Task.fromJson(taskJson);
+
+        final String originalTaskId = task.id!;
+
+        if (operation == 'create') {
+          /// create task on server
+          await apiService.createTask(task: task);
+
+          /// delete operation from sync queue box
+          await storageService.deleteASyncBoxTask(originalTaskId);
+
+          /// save task to local storage
+          await storageService.saveTask(task);
+
+          debugPrint('Task ${task.id} created successfully');
+        } else if (operation == 'update') {
+          /// update task on server
+          await apiService.updateTask(task: task);
+
+          /// delete operation from sync queue box
+          await storageService.deleteASyncBoxTask(originalTaskId);
+
+          /// save task to local storage
+          await storageService.updateTask(task);
+
+          debugPrint('Task ${task.id} updated successfully');
+        } else if (operation == 'delete') {
+          /// delete task on server
+          await apiService.deleteTask(originalTaskId);
+
+          /// delete operation from sync queue box
+          await storageService.deleteASyncBoxTask(originalTaskId);
+
+          /// delete task from local storage
+          await storageService.deleteTask(originalTaskId);
+
+          debugPrint('Task ${task.id} deleted successfully');
+        } else {
+          debugPrint('Invalid operation: $operation');
+          throw Exception('Invalid operation: $operation');
+        }
+      } catch (e) {
+        debugPrint('Error syncing single operation to server: $e');
+        throw Exception('Failed to sync single operation to server: $e');
+      }
+    }
   }
 
   //get all tassk
@@ -42,6 +117,8 @@ class TaskRepository {
       if (await isOnline()) {
         /// fetch from API
         final allTasks = await apiService.getAllTasks();
+
+        /// save tasks to local storage
         await storageService.saveAllTasks(allTasks);
         return allTasks;
       } else {
@@ -65,8 +142,26 @@ class TaskRepository {
         description: task.description,
         status: newStatus,
       );
-      await apiService.updateTask(task: updatedTask);
-      return updatedTask;
+
+      if (await isOnline()) {
+        /// update task on server
+        await apiService.updateTask(task: updatedTask);
+
+        /// save task to local storage
+        await storageService.updateTask(updatedTask);
+        return updatedTask;
+      } else {
+        /// add task to sync queue box
+        await storageService.addATaskToSyncBox(
+          task: updatedTask,
+          operation: 'update',
+        );
+
+        /// save task to local storage
+        await storageService.updateTask(updatedTask);
+
+        return updatedTask;
+      }
     } catch (e) {
       debugPrint('Error toggling task in repository: $e');
       throw Exception('Toggle failed: $e');
@@ -78,13 +173,31 @@ class TaskRepository {
     try {
       final newStatus = 'pendiente';
       final updatedTask = Task(
-        id: task.id,
+        id: DateTime.now().microsecondsSinceEpoch.toString(),
         title: task.title,
         description: task.description,
         status: newStatus,
       );
-      await apiService.createTask(task: updatedTask);
-      return updatedTask;
+      debugPrint('Creating task with ID: ${updatedTask.id}');
+      if (await isOnline()) {
+        /// create task on server
+        await apiService.createTask(task: updatedTask);
+
+        /// save task to local storage
+        await storageService.saveTask(updatedTask);
+
+        return updatedTask;
+      } else {
+        /// add task to sync queue box
+        await storageService.addATaskToSyncBox(
+          task: updatedTask,
+          operation: 'create',
+        );
+
+        /// save task to local storage
+        await storageService.saveTask(updatedTask);
+        return updatedTask;
+      }
     } catch (e) {
       debugPrint('Error creating task in repository: $e');
       throw Exception('Create failed: $e');
@@ -92,12 +205,23 @@ class TaskRepository {
   }
 
   //delete task
-  Future<void> deleteTask(String taskId) async {
+  Future<void> deleteTask(Task task) async {
     try {
+      if (task.id == null || task.id!.isEmpty) {
+        throw Exception('Task ID is required');
+      }
       if (await isOnline()) {
-        await apiService.deleteTask(taskId);
+        /// delete task on server
+        await apiService.deleteTask(task.id!);
+
+        /// delete task from local storage
+        await storageService.deleteTask(task.id!);
       } else {
-        await storageService.deleteTask(taskId);
+        /// add task to sync queue box
+        await storageService.addATaskToSyncBox(task: task, operation: 'delete');
+
+        /// delete task from local storage
+        await storageService.deleteTask(task.id!);
       }
     } catch (e) {
       throw Exception('Delete failed: $e');
@@ -107,7 +231,19 @@ class TaskRepository {
   //edit task
   Future<void> editTask({required Task task}) async {
     try {
-      await apiService.updateTask(task: task);
+      if (await isOnline()) {
+        /// update task on server
+        await apiService.updateTask(task: task);
+
+        /// save task to local storage
+        await storageService.updateTask(task);
+      } else {
+        /// add task to sync queue box
+        await storageService.addATaskToSyncBox(task: task, operation: 'update');
+
+        /// save task to local storage
+        await storageService.updateTask(task);
+      }
     } catch (e) {
       debugPrint('Error updating task in repository: $e');
       throw Exception('Update failed: $e');

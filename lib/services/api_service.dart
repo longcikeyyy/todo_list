@@ -20,6 +20,9 @@ class ApiService {
   Future<List<Task>> getAllTasks() async {
     try {
       final response = await http.get(Uri.parse(_baseUrl), headers: _headers);
+      debugPrint("Method: GET /tasks");
+      debugPrint("Response: ${response.body}");
+      debugPrint("Status code: ${response.statusCode}");
       if (response.statusCode == 200) {
         final Map<String, dynamic> json = jsonDecode(response.body);
         final List<dynamic> data = json['data'];
@@ -50,7 +53,12 @@ class ApiService {
         body: body,
       );
 
+      debugPrint("Method: PUT /tasks/${task.id}");
+      debugPrint("Response: ${response.body}");
+      debugPrint("Status code: ${response.statusCode}");
+
       if (response.statusCode != 200 && response.statusCode != 201) {
+        debugPrint('Update failed: ${response.body}');
         throw Exception('Update failed: ${response.body}');
       }
       debugPrint('✓ Task updated successfully');
@@ -70,8 +78,12 @@ class ApiService {
         headers: _headers,
         body: body,
       );
+      debugPrint("Method: POST /tasks");
+      debugPrint("Response: ${response.body}");
+      debugPrint("Status code: ${response.statusCode}");
 
       if (response.statusCode != 200 && response.statusCode != 201) {
+        debugPrint('Create failed: ${response.body}');
         throw Exception('Update failed: ${response.body}');
       }
       debugPrint(' Task create successfully');
@@ -86,7 +98,12 @@ class ApiService {
     try {
       final url = '$_baseUrl$taskId';
       final response = await http.delete(Uri.parse(url), headers: _headers);
+      debugPrint("Method: DELETE /tasks/$taskId");
+      debugPrint("Response: ${response.body}");
+      debugPrint("Status code: ${response.statusCode}");
+
       if (response.statusCode != 200 && response.statusCode != 204) {
+        debugPrint('Delete failed: ${response.body}');
         throw Exception('Failed Delete Task: ${response.body}');
       }
       debugPrint('Delete Task Successfully');

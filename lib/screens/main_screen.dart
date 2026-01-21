@@ -120,7 +120,7 @@ class _MainScreenState extends State<MainScreen> {
                     );
                     if (confirm == true) {
                       try {
-                        await provider.deleteTask(task.id!);
+                        await provider.deleteTask(task);
                         if (!context.mounted) return;
                         ScaffoldMessenger.of(context).showSnackBar(
                           SnackBar(

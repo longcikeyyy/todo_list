@@ -77,14 +77,14 @@ class TaskProvider extends ChangeNotifier {
   }
 
   //delete task
-  Future<void> deleteTask(String taskId) async {
+  Future<void> deleteTask(Task task) async {
     _isLoading = true;
     notifyListeners();
 
     try {
-      await _taskRepository.deleteTask(taskId);
+      await _taskRepository.deleteTask(task);
 
-      _tasks.removeWhere((task) => task.id == taskId);
+      _tasks.removeWhere((e) => e.id == task.id);
       notifyListeners();
     } catch (e) {
       _errorMessage = 'Error while deleting task: $e';

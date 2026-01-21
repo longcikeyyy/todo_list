@@ -22,13 +22,16 @@ class TaskRepository {
     ) async {
       if (result.contains(ConnectivityResult.none)) {
         debugPrint('Offline mode: No internet connection.');
-
+        
         /// Do something when offline
+         await storageService.getAllTasks();
       } else {
         debugPrint('Online mode: Internet connection restored.');
 
         /// If online, do something when online
         /// sync local changes to server
+        final localTasks = await storageService.getAllTasks(); 
+        await apiService.getAllTasks();
       }
     });
   }

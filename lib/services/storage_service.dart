@@ -63,15 +63,27 @@ class StorageService {
   }
 
   /// Sync Queue Operations Logic _syncQueueBox
+
   /// Add Task to Sync Queue Box
-  /// Map structure:
-  /// task: Task object
-  /// operation: 'create', 'update', 'delete'
-  /// timestamp: DateTime.now().microsecondsSinceEpoch.toString()
+  Future<void> addTasksToSyncBox(Map<String, dynamic> valueTask) async {
+    await _syncQueueBox.clear();
+    final key = DateTime.now().microsecondsSinceEpoch.toString();
+    //final valueTask = '';
+    await _syncQueueBox.put(key, valueTask);
+  }
 
   /// Get all Sync Queue Items
+  Future<List<Map>> getAllSyncBoxTask() async {
+    return _syncQueueBox.values.toList();
+  }
 
   /// Clear all Sync Queue Box
-
+  Future<void>deleteAllSyncBoxTasks(List<String> keys )async{
+    await _syncQueueBox.deleteAll(keys);
+  }
   /// Delete a specific Sync Queue Item
+  Future<void> deleteSyncBoxTasks(String key) async {
+    debugPrint('Deleting sync queue item with key: $key');
+    await _syncQueueBox.delete(key);
+  }
 }
